@@ -26,7 +26,19 @@ close(con)
 
 rm(tmp, lineSelection, i, con) ## clean unused variables
 
+### Tokenization
 
+library(RWeka)
+tokenText <- WordTokenizer(enDataSubset)
 
+### Profanity filtering
 
+library(sentimentr)
+
+setencesToken <- get_sentences(tokenText)
+profanityCheck <- !profanity(setencesToken)$profanity ## logical true when there's no profane words
+
+cleanData <- tokenText[profanityCheck]
+
+rm(setencesToken, profanityCheck, tokenText) ## clean unused variables
 
