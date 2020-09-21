@@ -46,11 +46,8 @@ profaneWords <- unique(tolower(c(profanity_arr_bad,
 
 corp <- tm_map(corp, removeWords, profaneWords) ## remove profanity words
 
-
+rm(profaneWords, myStopWords)
 #library(wordnet)
 #setDict("/usr/local/Cellar/wordnet/3.1/dict")
-
-
-
 
 
