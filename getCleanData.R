@@ -2,11 +2,11 @@
 
 if (!file.exists("Coursera-SwiftKey.zip")) {
         download.file("https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip",
-              "Coursera-SwiftKey.zip")
+                      "Coursera-SwiftKey.zip")
         unzip("Coursera-SwiftKey.zip")
 }
 
-## Tokenization and Profanity filtering
+## Clean data
 
 ### Random selection of data
 set.seed(123)
@@ -26,19 +26,11 @@ close(con)
 
 rm(tmp, lineSelection, i, con) ## clean unused variables
 
-### Tokenization
+## Transform data to Corpus and clean with an anonymous function
 
-library(RWeka)
-tokenText <- WordTokenizer(enDataSubset)
+source("myFunctions.R")
 
-### Profanity filtering
+corp <- VCorpus(VectorSource(enDataSubset))
+corp <- clean_corpus(corp)
 
-library(sentimentr)
-
-setencesToken <- get_sentences(tokenText)
-profanityCheck <- !profanity(setencesToken)$profanity ## logical true when there's no profane words
-
-cleanData <- tokenText[profanityCheck]
-
-rm(setencesToken, profanityCheck, tokenText) ## clean unused variables
 
