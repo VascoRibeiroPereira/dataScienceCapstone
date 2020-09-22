@@ -1,33 +1,10 @@
-source(getCleanData.R)
-
+source("getCleanData.R")
 library(dplyr)
-
-## Count-based evaluation
-corpTDM <- TermDocumentMatrix(corp)
-
-## frequency of terms
-
-lowFreq <- c(50,100,150,200,250,300)
-
-### Find simple frequency and plot
-
-corpTDMHighFreq <- tibble()
-
-for (i in 1:length(lowFreq)){
-
-        tmp <- length(findFreqTerms(corpTDM, lowFreq[i], Inf))
-        corpTDMHighFreq <- bind_rows(corpTDMHighFreq, 
-                  tibble(Freq = lowFreq[i], NumTerms = tmp))
-}
-
-rm(tmp, lowFreq)
-
 library(ggplot2)
 
-ggplot(corpTDMHighFreq, aes(NumTerms, Freq)) + geom_point()
+## Uni-gram
 
-
-### Compute a score based on the high frequency terms and plot top 20
+corpTDM <- TermDocumentMatrix(corp)
 
 frequentTerms <- findFreqTerms(corpTDM, 100, Inf)
 
@@ -43,7 +20,7 @@ for (i in 1:length(frequentTerms)){
 
 }
 
-rm(tmp, i)
+rm(tmp, i, frequentTerms)
 
 termsHighFreq <- arrange(termsHighFreq, desc(Frequency))
 
@@ -54,72 +31,69 @@ ggplot(termsHighFreq, aes(x = reorder(Terms, Frequency), Frequency)) +
                              high = "red") +
         coord_flip()
 
-### Compute a score based on the 2-grams frequency terms and plot
+
+## 2-grams
+
+corp_2gramTDM <- TermDocumentMatrix(
+        corp,
+        control = list(tokenize = tokenizer2))
 
 
-### Word Association - Cluster Analysis
+frequentTerms_2gram <- findFreqTerms(corp_2gramTDM, 10, Inf)
 
-corpTDM2 <- removeSparseTerms(corpTDM, sparse = 0.98)
-hc <- hclust(d = dist(corpTDM2, method = "euclidean"), method = "complete")
-hcd <- as.dendrogram(hc)
+termsHighFreq_2gram <- tibble()
 
-plot(hc)
-
-### Word Association - 1-gram
-
-library(qdap)
-
-associations <- findAssocs(corpTDM, frequentTerms, 0.2)
-
-associations_df <- tibble()
-
-
-for (i in 1:length(associations)){
-        if (length(associations[[i]]) >= 1) {
-                tmp <- list_vect2df(associations[i])
-                associations_df <- bind_rows(associations_df, tmp)
-        }
+for (i in 1:length(frequentTerms_2gram)){
+        
+        tmp <- tm_term_score(corp_2gramTDM, frequentTerms_2gram[i], 
+                             FUN = function(x) sum(x, na.rm = TRUE))
+        
+        termsHighFreq_2gram <- bind_rows(termsHighFreq_2gram, 
+                                         tibble(Terms = frequentTerms_2gram[i], Frequency = tmp))
         
 }
 
-associations_df$X1 <- as.factor(associations_df$X1)
+rm(tmp, i, frequentTerms_2gram)
 
-ggplot(associations_df, aes(X3, X2, color = X1)) + geom_point(size = 5)
+termsHighFreq_2gram <- arrange(termsHighFreq_2gram, desc(Frequency))
 
-### Word Association - 2-gram
-library(janeaustenr)
-
-tokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
-
-
-bigram_tdm <- TermDocumentMatrix(corp, control = list(tokenize = tokenizer))
-
-frequentTerms_bi <- findFreqTerms(bigram_tdm, 100, Inf)
-
-associations_bi <- findAssocs(bigram_tdm, frequentTerms_bi, 0.2)
-
-associations_bi_df <- tibble()
+ggplot(termsHighFreq_2gram, aes(x = reorder(Terms, Frequency), Frequency)) + 
+        geom_col(aes(fill = Frequency)) + 
+        xlab("Terms") +
+        scale_fill_gradient(low = "green", 
+                            high = "red") +
+        coord_flip()
 
 
-for (i in 1:length(associations_bi)){
-        if (length(associations_bi[[i]]) >= 1) {
-                tmp <- list_vect2df(associations_bi[i])
-                associations_bi_df <- bind_rows(associations_bi_df, tmp)
-        }
+
+## 3-grams
+
+corp_3gramTDM <- TermDocumentMatrix(
+        corp,
+        control = list(tokenize = tokenizer3))
+
+
+frequentTerms_3gram <- findFreqTerms(corp_3gramTDM, 3, Inf)
+
+termsHighFreq_3gram <- tibble()
+
+for (i in 1:length(frequentTerms_3gram)){
+        
+        tmp <- tm_term_score(corp_3gramTDM, frequentTerms_3gram[i], 
+                             FUN = function(x) sum(x, na.rm = TRUE))
+        
+        termsHighFreq_3gram <- bind_rows(termsHighFreq_3gram, 
+                                         tibble(Terms = frequentTerms_3gram[i], Frequency = tmp))
         
 }
 
-associations_bi_df$X1 <- as.factor(associations_df$X1)
+rm(tmp, i, frequentTerms_3gram)
 
-ggplot(associations_bi_df, aes(X3, X2, color = X1)) + geom_point(size = 5)
+termsHighFreq_3gram <- arrange(termsHighFreq_3gram, desc(Frequency))
 
-
-
-## Check wordcloud
-
-
-bigram_dtm <- DocumentTermMatrix(corp, control = list(tokenize = tokenizer))
-bigram_dtm_m <- as.matrix(bigram_dtm)
-freq <- colSums(bigram_dtm_m)
-bi_words <- names(freq)
-
+ggplot(termsHighFreq_3gram, aes(x = reorder(Terms, Frequency), Frequency)) + 
+        geom_col(aes(fill = Frequency)) + 
+        xlab("Terms") +
+        scale_fill_gradient(low = "green", 
+                            high = "red") +
+        coord_flip()

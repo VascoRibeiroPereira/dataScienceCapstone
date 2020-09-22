@@ -1,5 +1,6 @@
 library(tm)
 library(lexicon)
+library(stringr)
 
 clean_corpus <- function(corpus){
         corpus <- tm_map(corpus, stripWhitespace)
@@ -21,4 +22,14 @@ clean_corpus <- function(corpus){
         corpus <- tm_map(corpus, removePunctuation)
         corpus <- tm_map(corpus, removeNumbers)
         return(corpus)
+}
+
+library(RWeka)
+
+tokenizer2 <- function(x) {
+        NGramTokenizer(x, Weka_control(min = 2, max = 2))
+}
+
+tokenizer3 <- function(x) {
+        NGramTokenizer(x, Weka_control(min = 3, max = 3))
 }

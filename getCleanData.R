@@ -1,3 +1,7 @@
+## Libraries
+library(tokenizers)
+source("myFunctions.R")
+
 ## Get the data
 
 if (!file.exists("Coursera-SwiftKey.zip")) {
@@ -27,8 +31,6 @@ close(con)
 rm(tmp, lineSelection, i, con) ## clean unused variables
 
 ## Transform data to Corpus and clean with an anonymous function
-
-source("myFunctions.R")
 
 corp <- VCorpus(VectorSource(enDataSubset))
 corp <- clean_corpus(corp)
