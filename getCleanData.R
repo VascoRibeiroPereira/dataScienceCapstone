@@ -32,7 +32,7 @@ rm(tmp, lineSelection, i, con) ## clean unused variables
 
 ## Transform data to Corpus and clean with an anonymous function
 
-corp <- VCorpus(VectorSource(enDataSubset))
-corp <- clean_corpus(corp)
+corp_toClean <- VCorpus(VectorSource(enDataSubset))
+corp <- clean_corpus(corp_toClean)
 
 
