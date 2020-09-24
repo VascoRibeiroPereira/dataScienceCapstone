@@ -6,7 +6,7 @@ library(ggplot2)
 
 corpTDM <- TermDocumentMatrix(corp)
 
-frequentTerms <- findFreqTerms(corpTDM, 100, Inf)
+frequentTerms <- findFreqTerms(corpTDM, 25, Inf)
 
 termsHighFreq <- tibble()
 
@@ -24,9 +24,10 @@ rm(tmp, i, frequentTerms)
 
 termsHighFreq <- arrange(termsHighFreq, desc(Frequency))
 
-plot_1_gram <- ggplot(termsHighFreq, aes(x = reorder(Terms, Frequency), Frequency)) + 
+plot_1_gram <- ggplot(subset(termsHighFreq, Frequency %in% 100:500), aes(x = reorder(Terms, Frequency), Frequency)) + 
         geom_col(aes(fill = Frequency)) + 
         xlab("Terms") +
+        ggtitle("1-gram Frequency Chart", subtitle = waiver()) +
         scale_fill_gradient(low = "green", 
                              high = "red") +
         coord_flip()
@@ -39,7 +40,7 @@ corp_2gramTDM <- TermDocumentMatrix(
         control = list(tokenize = tokenizer2))
 
 
-frequentTerms_2gram <- findFreqTerms(corp_2gramTDM, 10, Inf)
+frequentTerms_2gram <- findFreqTerms(corp_2gramTDM, 5, Inf)
 
 termsHighFreq_2gram <- tibble()
 
@@ -57,9 +58,10 @@ rm(tmp, i, frequentTerms_2gram)
 
 termsHighFreq_2gram <- arrange(termsHighFreq_2gram, desc(Frequency))
 
-plot_2_gram <- ggplot(termsHighFreq_2gram, aes(x = reorder(Terms, Frequency), Frequency)) + 
+plot_2_gram <- ggplot(subset(termsHighFreq_2gram, Frequency %in% 10:50), aes(x = reorder(Terms, Frequency), Frequency)) + 
         geom_col(aes(fill = Frequency)) + 
         xlab("Terms") +
+        ggtitle("2-gram Frequency Chart", subtitle = waiver()) +
         scale_fill_gradient(low = "green", 
                             high = "red") +
         coord_flip()
@@ -73,7 +75,7 @@ corp_3gramTDM <- TermDocumentMatrix(
         control = list(tokenize = tokenizer3))
 
 
-frequentTerms_3gram <- findFreqTerms(corp_3gramTDM, 3, Inf)
+frequentTerms_3gram <- findFreqTerms(corp_3gramTDM, 2, Inf)
 
 termsHighFreq_3gram <- tibble()
 
@@ -91,9 +93,10 @@ rm(tmp, i, frequentTerms_3gram)
 
 termsHighFreq_3gram <- arrange(termsHighFreq_3gram, desc(Frequency))
 
-plot_3_gram <- ggplot(termsHighFreq_3gram, aes(x = reorder(Terms, Frequency), Frequency)) + 
+plot_3_gram <- ggplot(subset(termsHighFreq_3gram, Frequency %in% 3:10), aes(x = reorder(Terms, Frequency), Frequency)) + 
         geom_col(aes(fill = Frequency)) + 
         xlab("Terms") +
+        ggtitle("3-gram Frequency Chart", subtitle = waiver()) +
         scale_fill_gradient(low = "green", 
                             high = "red") +
         coord_flip()
