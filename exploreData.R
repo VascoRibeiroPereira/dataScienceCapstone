@@ -126,9 +126,28 @@ library(textcat)
 
 lang_ng1 <- textcat(c_ng1$ngrams, p=textcat::ECIMCI_profiles, method = "Dice")
 lang_ng1_df <- as_tibble(table(lang_ng1)) %>% arrange(desc(n))
+lang_ng1_df <- lang_ng1_df %>% mutate(ngram = "1-gram") %>%
+        rename(language = lang_ng1)
+ 
 
 lang_ng2 <- textcat(c_ng2$ngrams, p=textcat::ECIMCI_profiles, method = "Dice")
 lang_ng2_df <- as_tibble(table(lang_ng2)) %>% arrange(desc(n))
+lang_ng2_df <- lang_ng2_df %>% mutate(ngram = "2-gram") %>%
+        rename(language = lang_ng2)
 
 lang_ng3 <- textcat(c_ng3$ngrams, p=textcat::ECIMCI_profiles, method = "Dice")
 lang_ng3_df <- as_tibble(table(lang_ng3)) %>% arrange(desc(n))
+lang_ng3_df <- lang_ng3_df %>% mutate(ngram = "3-gram") %>%
+        rename(language = lang_ng3)
+
+
+### Plots
+
+# The language identification inproves whith the for each n+1 gram
+
+#lang_ng_n <- bind_rows(lang_ng1_df, lang_ng2_df, lang_ng3_df)
+#langPlot <- ggplot(lang_ng_n, aes(language, n)) + geom_col() # barplot
+#langPlot + facet_wrap( ~ ngram, nrow = 3) + theme(legend.position = "none")
+
+
+
