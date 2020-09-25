@@ -5,14 +5,25 @@ library(ngram)
 
 ## Corpus to string
 corp_str <- concatenate(text=unlist(lapply(corp, "[", "content")))
-corp_str <- preprocess(corp_str, case = "lower", remove.punct = TRUE, remove.numbers = TRUE, fix.spacing = TRUE)
+corp_str <- preprocess(corp_str, case = "lower", 
+                       remove.punct = TRUE, 
+                       remove.numbers = TRUE, 
+                       fix.spacing = FALSE)
 
 
 ## n-gram tables
 ng_1 <- as_tibble(get.phrasetable(ngram(corp_str, 1)))
+ng_1$ngrams <- gsub(" $", "", ng_1$ngrams)
+
 ng_2 <- as_tibble(get.phrasetable(ngram(corp_str, 2)))
+ng_2$ngrams <- gsub(" $", "", ng_2$ngrams)
+
 ng_3 <- as_tibble(get.phrasetable(ngram(corp_str, 3)))
+ng_3$ngrams <- gsub(" $", "", ng_3$ngrams)
+
 ng_4 <- as_tibble(get.phrasetable(ngram(corp_str, 4)))
+ng_4$ngrams <- gsub(" $", "", ng_4$ngrams)
+
 
 ## plots
 
