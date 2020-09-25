@@ -17,3 +17,12 @@
 ## ngram model with Kneser-Ney smoothing? -> cmscu library
 ## text2vec package?
 ## cmscu package?
+
+## Test this case:
+
+library(cmscu)
+
+yelp_1g <- new(FrequencyDictionary,4,2^26)
+
+
+
