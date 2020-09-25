@@ -1,161 +1,123 @@
 source("getCleanData.R")
 library(dplyr)
 library(ggplot2)
+library(ngram)
 
-## Uni-gram
+## Corpus to string
+corp_str <- concatenate(text=unlist(lapply(corp, "[", "content")))
+corp_str <- preprocess(corp_str, case = "lower", remove.punct = TRUE, remove.numbers = TRUE, fix.spacing = TRUE)
 
-corpTDM <- TermDocumentMatrix(corp)
 
-frequentTerms <- findFreqTerms(corpTDM, 25, Inf)
+## n-gram tables
+ng_1 <- as_tibble(get.phrasetable(ngram(corp_str, 1)))
+ng_2 <- as_tibble(get.phrasetable(ngram(corp_str, 2)))
+ng_3 <- as_tibble(get.phrasetable(ngram(corp_str, 3)))
+ng_4 <- as_tibble(get.phrasetable(ngram(corp_str, 4)))
 
-termsHighFreq <- tibble()
+## plots
 
-for (i in 1:length(frequentTerms)){
-        
-        tmp <- tm_term_score(corpTDM, frequentTerms[i], 
-                             FUN = function(x) sum(x, na.rm = TRUE))
-        
-        termsHighFreq <- bind_rows(termsHighFreq, 
-                                     tibble(Terms = frequentTerms[i], Frequency = tmp))
-
-}
-
-rm(tmp, i, frequentTerms)
-
-termsHighFreq <- arrange(termsHighFreq, desc(Frequency))
-
-plot_1_gram <- ggplot(subset(termsHighFreq, Frequency %in% 100:500), aes(x = reorder(Terms, Frequency), Frequency)) + 
-        geom_col(aes(fill = Frequency)) + 
+plot_1_gram <- ggplot(subset(ng_1, freq %in% 100:500), aes(x = reorder(ngrams, freq), freq)) + 
+        geom_col(aes(fill = freq)) + 
         xlab("Terms") +
+        ylab("Frequency") +
         ggtitle("1-gram Frequency Chart", subtitle = waiver()) +
         scale_fill_gradient(low = "green", 
-                             high = "red") +
+                            high = "red") +
         coord_flip()
 
-
-## 2-grams
-
-corp_2gramTDM <- TermDocumentMatrix(
-        corp,
-        control = list(tokenize = tokenizer2))
-
-
-frequentTerms_2gram <- findFreqTerms(corp_2gramTDM, 5, Inf)
-
-termsHighFreq_2gram <- tibble()
-
-for (i in 1:length(frequentTerms_2gram)){
-        
-        tmp <- tm_term_score(corp_2gramTDM, frequentTerms_2gram[i], 
-                             FUN = function(x) sum(x, na.rm = TRUE))
-        
-        termsHighFreq_2gram <- bind_rows(termsHighFreq_2gram, 
-                                         tibble(Terms = frequentTerms_2gram[i], Frequency = tmp))
-        
-}
-
-rm(tmp, i, frequentTerms_2gram)
-
-termsHighFreq_2gram <- arrange(termsHighFreq_2gram, desc(Frequency))
-
-plot_2_gram <- ggplot(subset(termsHighFreq_2gram, Frequency %in% 10:50), aes(x = reorder(Terms, Frequency), Frequency)) + 
-        geom_col(aes(fill = Frequency)) + 
+plot_2_gram <- ggplot(subset(ng_2, freq %in% 10:50), aes(x = reorder(ngrams, freq), freq)) + 
+        geom_col(aes(fill = freq)) + 
         xlab("Terms") +
-        ggtitle("2-gram Frequency Chart", subtitle = waiver()) +
+        ylab("Frequency") +
+        ggtitle("1-gram Frequency Chart", subtitle = waiver()) +
         scale_fill_gradient(low = "green", 
                             high = "red") +
         coord_flip()
 
-
-
-## 3-grams
-
-corp_3gramTDM <- TermDocumentMatrix(
-        corp,
-        control = list(tokenize = tokenizer3))
-
-
-frequentTerms_3gram <- findFreqTerms(corp_3gramTDM, 2, Inf)
-
-termsHighFreq_3gram <- tibble()
-
-for (i in 1:length(frequentTerms_3gram)){
-        
-        tmp <- tm_term_score(corp_3gramTDM, frequentTerms_3gram[i], 
-                             FUN = function(x) sum(x, na.rm = TRUE))
-        
-        termsHighFreq_3gram <- bind_rows(termsHighFreq_3gram, 
-                                         tibble(Terms = frequentTerms_3gram[i], Frequency = tmp))
-        
-}
-
-rm(tmp, i, frequentTerms_3gram)
-
-termsHighFreq_3gram <- arrange(termsHighFreq_3gram, desc(Frequency))
-
-plot_3_gram <- ggplot(subset(termsHighFreq_3gram, Frequency %in% 3:10), aes(x = reorder(Terms, Frequency), Frequency)) + 
-        geom_col(aes(fill = Frequency)) + 
+plot_3_gram <- ggplot(subset(ng_3, freq %in% 3:10), aes(x = reorder(ngrams, freq), freq)) + 
+        geom_col(aes(fill = freq)) + 
         xlab("Terms") +
-        ggtitle("3-gram Frequency Chart", subtitle = waiver()) +
+        ylab("Frequency") +
+        ggtitle("1-gram Frequency Chart", subtitle = waiver()) +
         scale_fill_gradient(low = "green", 
                             high = "red") +
         coord_flip()
 
+## Frequency Sorted dictionary
 
-## Frequency sorted dictionary
+c_ng1 <- ng_1 %>%
+        mutate(Cumulative = cumsum(prop))
 
-frequentTerms <- findFreqTerms(corpTDM, 1, Inf)
+c_ng2 <- ng_2 %>%
+        mutate(Cumulative = cumsum(prop))
 
-freq_sorted <- tibble()
+c_ng3 <- ng_3 %>%
+        mutate(Cumulative = cumsum(prop))
 
-for (i in 1:length(frequentTerms)){
-        
-        tmp <- tm_term_score(corpTDM, frequentTerms[i], 
-                             FUN = function(x) sum(x, na.rm = TRUE))
-        
-        freq_sorted <- bind_rows(freq_sorted, 
-                                   tibble(Terms = frequentTerms[i], Frequency = tmp))
-        
-}
-rm(tmp, frequentTerms)
+## Plots of frequency sorted dictionary expressed in Cumulative Proportion
 
-freq_sorted <- freq_sorted %>% 
-        arrange(desc(Frequency)) %>% 
-        mutate(Percentage = Frequency * 100 / sum(freq_sorted$Frequency)) %>%
-        mutate(Cumulative = cumsum(Percentage))
-
-### Frequency sorted dictionary table 
-
-str(freq_sorted)
-
-
-### Plot of frequency sorted dictionary expressed in Cumulative Percentages
-plot_cumPerc <- ggplot(freq_sorted, aes(1:dim(freq_sorted)[1], Cumulative)) + 
+plot_c_ng1 <- ggplot(c_ng1, aes(1:dim(c_ng1)[1], Cumulative)) + 
         geom_line() +
-        annotate("rect", xmin = 0, xmax = dim(freq_sorted %>% filter(Cumulative <= 50.0))[1], 
-                 ymin = 0, ymax = 50, alpha = .4) +
-        annotate("text", x = 1000, y = 25, label = "<<<< 50% Cover") +
-        annotate("rect", xmin = 0, xmax = dim(freq_sorted %>% filter(Cumulative <= 90.0))[1], 
-                 ymin = 0, ymax = 90, alpha = .3) +
-        annotate("text", x = 6000, y = 96, label = "<<<< 90% Cover") +
-        annotate("rect", xmin = 0, xmax = dim(freq_sorted %>% filter(Cumulative <= 100.0))[1], 
-                 ymin = 0, ymax = 100, alpha = .2) +
-        annotate("text", x = 8500, y = 105, label = "<<<< 100% Cover") +
+        annotate("rect", xmin = 0, xmax = dim(c_ng1 %>% filter(Cumulative <= .500))[1], 
+                 ymin = 0, ymax = .50, alpha = .4) +
+        annotate("text", x = 1000, y = .25, label = "<<<< 50% Cover") +
+        annotate("rect", xmin = 0, xmax = dim(c_ng1 %>% filter(Cumulative <= .900))[1], 
+                 ymin = 0, ymax = .90, alpha = .3) +
+        annotate("text", x = 6000, y = .96, label = "<<<< 90% Cover") +
+        annotate("rect", xmin = 0, xmax = dim(c_ng1 %>% filter(Cumulative <= 1.000))[1], 
+                 ymin = 0, ymax = 1.00, alpha = .2) +
+        annotate("text", x = 8500, y = 1.05, label = "<<<< 100% Cover") +
         xlab("Number of Terms") +
-        ylab("Cumulative Percentage")
+        ylab("Cumulative Proportion")
+
+plot_c_ng2 <- ggplot(c_ng2, aes(1:dim(c_ng2)[1], Cumulative)) + 
+        geom_line() +
+        annotate("rect", xmin = 0, xmax = dim(c_ng2 %>% filter(Cumulative <= .500))[1], 
+                 ymin = 0, ymax = .50, alpha = .4) +
+        annotate("text", x = 10000, y = .25, label = "<<<< 50% Cover") +
+        annotate("rect", xmin = 0, xmax = dim(c_ng2 %>% filter(Cumulative <= .900))[1], 
+                 ymin = 0, ymax = .90, alpha = .3) +
+        annotate("text", x = 15000, y = .96, label = "<<<< 90% Cover") +
+        annotate("rect", xmin = 0, xmax = dim(c_ng2 %>% filter(Cumulative <= 1.000))[1], 
+                 ymin = 0, ymax = 1.00, alpha = .2) +
+        annotate("text", x = 30000, y = 1.05, label = "<<<< 100% Cover") +
+        xlab("Number of Terms") +
+        ylab("Cumulative Proportion")
+
+plot_c_ng3 <- ggplot(c_ng3, aes(1:dim(c_ng3)[1], Cumulative)) + 
+        geom_line() +
+        annotate("rect", xmin = 0, xmax = dim(c_ng3 %>% filter(Cumulative <= .500))[1], 
+                 ymin = 0, ymax = .50, alpha = .4) +
+        annotate("text", x = 12000, y = .25, label = "<<<< 50% Cover") +
+        annotate("rect", xmin = 0, xmax = dim(c_ng3 %>% filter(Cumulative <= .900))[1], 
+                 ymin = 0, ymax = .90, alpha = .3) +
+        annotate("text", x = 28000, y = .96, label = "<<<< 90% Cover") +
+        annotate("rect", xmin = 0, xmax = dim(c_ng3 %>% filter(Cumulative <= 1.000))[1], 
+                 ymin = 0, ymax = 1.00, alpha = .2) +
+        annotate("text", x = 31000, y = 1.05, label = "<<<< 100% Cover") +
+        xlab("Number of Terms") +
+        ylab("Cumulative Proportion")
+
 
 ### Number of unique words to cover 50%
-dim(freq_sorted %>% filter(Cumulative <= 50.0))[1]
+dim(c_ng1 %>% filter(Cumulative <= .50))[1]
+dim(c_ng2 %>% filter(Cumulative <= .50))[1]
+dim(c_ng3 %>% filter(Cumulative <= .50))[1]
 
 ### Number of unique words to cover 90%
-dim(freq_sorted %>% filter(Cumulative <= 90.0))[1]
+dim(c_ng1 %>% filter(Cumulative <= .90))[1]
+dim(c_ng2 %>% filter(Cumulative <= .90))[1]
+dim(c_ng3 %>% filter(Cumulative <= .90))[1]
 
-
-## Evaluate non-english words
+## Evaluate non-english grams
 
 library(textcat)
 
-corp_eval_lan <- TermDocumentMatrix(corp_toClean) ## using the unclean data to reduce id error
-term_lang <- textcat(corp_eval_lan$dimnames$Terms)
+lang_ng1 <- textcat(c_ng1$ngrams, p=textcat::ECIMCI_profiles, method = "Dice")
+lang_ng1_df <- as_tibble(table(lang_ng1)) %>% arrange(desc(n))
 
-lang_df <- as_tibble(table(term_lang)) %>% arrange(desc(n))
+lang_ng2 <- textcat(c_ng2$ngrams, p=textcat::ECIMCI_profiles, method = "Dice")
+lang_ng2_df <- as_tibble(table(lang_ng2)) %>% arrange(desc(n))
+
+lang_ng3 <- textcat(c_ng3$ngrams, p=textcat::ECIMCI_profiles, method = "Dice")
+lang_ng3_df <- as_tibble(table(lang_ng3)) %>% arrange(desc(n))
