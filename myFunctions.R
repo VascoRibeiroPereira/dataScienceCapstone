@@ -5,7 +5,7 @@ library(stringr)
 clean_corpus <- function(corpus){
         corpus <- tm_map(corpus, stripWhitespace)
         corpus <- tm_map(corpus, content_transformer(tolower))
-        corpus <- tm_map(corpus, removeWords, c(stopwords("en")))
+        #corpus <- tm_map(corpus, removeWords, c(stopwords("en")))
         
         alvarez_alternative <- str_replace_all(profanity_alvarez, "\\*", "\\\\*")
         alvarez_alternative <- str_replace_all(alvarez_alternative, "\\(", "\\\\(")
