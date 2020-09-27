@@ -1,5 +1,5 @@
-## Libraries
-library(tokenizers)
+## source Libraries and Functions
+
 source("myFunctions.R")
 
 ## Get the data
@@ -33,6 +33,9 @@ rm(tmp, lineSelection, i, con) ## clean unused variables
 ## Transform data to Corpus and clean with an anonymous function
 
 corp_toClean <- VCorpus(VectorSource(enDataSubset))
-corp <- clean_corpus(corp_toClean)
+
+corp_StopWords <- clean_corpus(corp_toClean) ## With the stopWords
+
+corp <- corpus_stopWords(corp_toClean) ## Without the stopWords
 
 

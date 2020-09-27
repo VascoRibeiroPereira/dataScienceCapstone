@@ -1,7 +1,4 @@
 source("getCleanData.R")
-library(dplyr)
-library(ggplot2)
-library(ngram)
 
 ## Corpus to string
 corp_str <- concatenate(text=unlist(lapply(corp, "[", "content")))
