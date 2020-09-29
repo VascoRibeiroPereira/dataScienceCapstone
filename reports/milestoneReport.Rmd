@@ -1,0 +1,266 @@
+---
+title: "SwiftKey Training Data Major Features"
+author: "Vasco Pereira"
+date: "`r as.Date(Sys.time())`"
+output: 
+        html_document:
+                toc: true
+                toc_float: true
+                toc_depth: 3
+                theme: united
+                highlight: breezedark
+                df_print: paged
+                code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      fig.align = "center", message = FALSE, warning = FALSE)
+#options(scipen = 999)
+```
+
+# Introduction {.tabset}
+
+The objectives of this report is to:   
+
+1. Inspect major features of the english data sets provided   
+2. Create a plan to develop a:   
+
+    2.1 Prediction algorithm   
+    2.2 Shiny App 
+
+## Summary
+
+To be completed after the Report being made.
+
+For more information please visit the repository of the present work at <https://github.com/VascoRibeiroPereira/dataScienceCapstone>
+
+## Libraries
+
+All libraries needed are here (check the code clicking the button).
+
+```{r, cache=TRUE }
+
+library(R.utils)
+library(dplyr)
+library(tm)
+library(lexicon)
+library(stringr)
+library(tidyverse)
+library(tidytext)
+library(textclean)
+library(tokenizers)
+library(markovchain)
+library(ngram)
+library(ggplot2)
+
+```
+
+# Data Insight {.tabset}
+
+The data was downloaded and unziped, but instead of open or read all data, only a small part was peeked in order to preserve the computer memory for other tasks.
+
+```{r }
+
+mywd <- dirname(getwd())
+        
+if (!file.exists("Coursera-SwiftKey.zip")) {
+        download.file("https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip",
+                      "Coursera-SwiftKey.zip")
+        unzip("Coursera-SwiftKey.zip")
+}
+
+file_insight <- function(fileName){
+        
+        queryFile <- paste(mywd, "/final/en_US/", fileName, sep="")
+        con <- file(queryFile, "r")
+        preview <- readLines(con, 2, skipNul = TRUE)
+        close(con)
+        preview
+}
+
+```
+
+There are three english files: `en_US.twitter.txt`, `en_US.blogs.txt` and `en_US.news.txt`.
+
+Preview of `en_US.twitter.txt`:
+
+```{r }
+
+file_insight("en_US.twitter.txt")
+
+```
+
+
+Preview of `en_US.blogs.txt`:
+
+```{r }
+
+file_insight("en_US.blogs.txt")
+
+```
+
+Preview of `en_US.news.txt`:
+
+```{r }
+
+file_insight("en_US.news.txt")
+
+```
+
+The three files are composed of delimited text entries with paragraphs. Their dimentions are summarised in the next table:
+
+
+```{r, cache=TRUE }
+
+directory <- paste(mywd, "final", "en_US", sep="/")
+filesFull <- list.files(path = directory, full.names = T)
+filenames <- lapply(directory, list.files)
+
+filesSize_df <- tibble()
+for (i in 1:length(filenames[[1]])) {
+tmp_size <- utils:::format.object_size(file.info(filesFull[i])[["size"]], "auto")
+tmp_name <- filenames[[1]][i]
+tmp_length <- length(readLines(filesFull[i], warn = FALSE))
+tmp_row <- c(tmp_name, tmp_size, tmp_length)
+filesSize_df <- rbind(filesSize_df, tmp_row, stringsAsFactors = FALSE)
+}
+names(filesSize_df) <- c("file names", "size", "entries")
+
+filesSize_df
+```
+
+This work will focus primarily in the `en_US.twitter.txt`. This data have `r filesSize_df[3,3]` entries, wich means that there's a lot of data to work with and may be impratical to import the complete file to perform data analysis due to memory limitations.
+
+For the time being this work will be focused in ~5000 random selected entries of text from the `en_US.twitter.txt`, representing `r paste(round(5000/as.numeric(filesSize_df[3,3])*100,1), "%", sep="")` of the complete data.
+
+
+# Cleaning the Data {.tabset}
+
+The subset of the data was randomly selected with a `rbinom` function in relation to the number of entries. 
+
+```{r, cache=TRUE }
+
+set.seed(123)
+lineSelection <- rbinom(filesSize_df[3,3],1,.002) ## probability of a 1 to appear is 0,002 (for 0,2%) in all data
+
+con <- file(paste(mywd, "/final/en_US/en_US.twitter.txt", sep=""), 
+            "r")
+
+enDataSubset <- integer()
+
+for (i in 1:length(lineSelection)){
+        tmp <- readLines(con, lineSelection[i], skipNul = TRUE)
+        enDataSubset <- c(enDataSubset, tmp)
+}
+
+close(con)
+
+
+```
+
+For cleaning purposes the data was transformed in a `Volatile Corpora` with the **`tm`** package.
+
+```{r, cache=TRUE }
+corp_toClean <- VCorpus(VectorSource(enDataSubset))
+```
+
+A function named `clean_corpus` was made in order to clean the *Corpora* with this features:   
+
+1. Replacing contractions *(i.e. "didn't" = "did not")*   
+2. Remove punctuation *(i.e. "?" = "")*   
+3. Replace money *(i.e. "$3" = "three dollars")*   
+4. Replace emoticon *(i.e. ":)" = "smiley")*   
+5. Replace symbol *(i.e. "i am @ home" = "i am  at  home")*   
+6. Replace word elongation *(i.e. "sooo goooood" = "so good")*   
+7. Replace ordinal *(i.e. "1st" = "first")*   
+8. Replace slang *(i.e. "RT" = "Retweet")*   
+9. Replace number *(i.e. "1" = "one")*   
+10. Replace emoji *(i.e. "U0001f60d" = "smiling face with heart-eyes")*   
+11. Remove white space *(i.e. "Hello     World" = "Hello World")*   
+12. Replace to lower case *(i.e. "Ham" = "ham")*   
+13. Remove profane words    
+
+``` {r, cache=TRUE }
+
+## Expanding the contractions lexicon
+new_con <- data.frame("here's", "here is") 
+names(new_con) <- c("contraction", "expanded")
+key_contractions <- rbind(key_contractions, new_con)
+
+## Expanding Slang df
+new_slang <- data.frame("RT", "Retweet") 
+names(new_slang) <- c("x", "y")
+hash_internet_slang <- rbind(hash_internet_slang, new_slang)
+
+## Cleaning and coercing all profanity data sources
+alvarez_alternative <- str_replace_all(profanity_alvarez, "\\*", "\\\\*")
+alvarez_alternative <- str_replace_all(alvarez_alternative, "\\(", "\\\\(")
+anger_alternative <- str_replace_all(profanity_zac_anger, "\\*", "\\\\*")
+anger_alternative <- str_replace_all(anger_alternative, "\\(", "\\\\(")
+profaneWords <- unique(tolower(c(profanity_arr_bad, 
+                                 profanity_banned,
+                                 profanity_racist,
+                                 alvarez_alternative,
+                                 anger_alternative)))
+
+## Function
+clean_corpus <- function(corpus){
+        
+        for (i in 1:length(corpus)) corpus[[i]] <- corpus[[i]] %>%
+                        replace_contraction(contraction.key = key_contractions) %>%
+                        removePunctuation(preserve_intra_word_contractions = TRUE,
+                                          preserve_intra_word_dashes = TRUE,
+                                          ucp = TRUE) %>%
+                        replace_money() %>%
+                        replace_emoticon() %>%
+                        replace_symbol() %>%
+                        replace_word_elongation() %>%
+                        replace_ordinal() %>%
+                        replace_internet_slang(slang = paste0("\\b",
+                                                              hash_internet_slang[[1]], "\\b"),
+                                               replacement = hash_internet_slang[[2]], ignore.case = TRUE) %>%
+                        replace_number() %>%
+                        replace_emoji() %>%
+                        replace_non_ascii()
+        corpus <- tm_map(corpus, stripWhitespace)
+        corpus <- tm_map(corpus, tolower)
+        corpus <- tm_map(corpus, removeWords, profaneWords)
+        return(corpus)
+}
+
+```
+
+
+```{r, cache=TRUE}
+
+corp <- clean_corpus(corp_toClean)
+
+```
+
+
+An example of the text cleaning in action:
+
+- Before
+
+```{r }
+
+unlist(corp_toClean[[1]][2])[1]
+
+
+```   
+
+- After   
+
+```{r }
+
+corp[[1]][2]
+
+```
+
+# Data Exploration {.tabset}
+
+Although the `Corpus` class is nice to apply cleaning methods by the `tm_map` function, and also to preserve metadata, it is not very usefull for data visualization and for modeling purposes. The data was transformed into a `character string`, with which it will be worked from now on.
+
+
+
