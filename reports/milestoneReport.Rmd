@@ -72,7 +72,7 @@ if (!file.exists("Coursera-SwiftKey.zip")) {
 
 file_insight <- function(fileName){
         
-        queryFile <- paste(mywd, "/final/en_US/", fileName, sep="")
+        queryFile <- paste(mywd, "/reports/final/en_US/", fileName, sep="")
         con <- file(queryFile, "r")
         preview <- readLines(con, 2, skipNul = TRUE)
         close(con)
@@ -113,7 +113,7 @@ The three files are composed of delimited text entries with paragraphs. Their di
 
 ```{r, cache=TRUE }
 
-directory <- paste(mywd, "final", "en_US", sep="/")
+directory <- paste(mywd, "/reports/final/en_US/", sep="")
 filesFull <- list.files(path = directory, full.names = T)
 filenames <- lapply(directory, list.files)
 
@@ -144,7 +144,7 @@ The subset of the data was randomly selected with a `rbinom` function in relatio
 set.seed(123)
 lineSelection <- rbinom(filesSize_df[3,3],1,.002) ## probability of a 1 to appear is 0,002 (for 0,2%) in all data
 
-con <- file(paste(mywd, "/final/en_US/en_US.twitter.txt", sep=""), 
+con <- file(paste(mywd, "/reports/final/en_US/en_US.twitter.txt", sep=""), 
             "r")
 
 enDataSubset <- integer()
@@ -245,7 +245,7 @@ An example of the text cleaning in action:
 
 ```{r }
 
-unlist(corp_toClean[[1]][2])[1]
+unlist(corp_toClean[[1]][1])[1]
 
 
 ```   
@@ -254,7 +254,7 @@ unlist(corp_toClean[[1]][2])[1]
 
 ```{r }
 
-corp[[1]][2]
+corp[[1]][1]
 
 ```
 
