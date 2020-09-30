@@ -39,7 +39,7 @@ For more information please visit the repository of the present work at <https:/
 
 All libraries needed are here (check the code clicking the button).
 
-```{r, cache=TRUE }
+```{r }
 
 library(R.utils)
 library(dplyr)
@@ -60,7 +60,7 @@ library(ggplot2)
 
 The data was downloaded and unziped, but instead of open or read all data, only a small part was peeked in order to preserve the computer memory for other tasks.
 
-```{r }
+```{r, cache=TRUE }
 
 mywd <- dirname(getwd())
         
@@ -137,33 +137,22 @@ For the time being this work will be focused in ~5000 random selected entries of
 
 # Cleaning the Data {.tabset}
 
-The subset of the data was randomly selected with a `rbinom` function in relation to the number of entries. 
+The subset of the data was randomly selected with a `sample` function in relation to the choosen percentage of the number of entries. 
 
 ```{r, cache=TRUE }
 
-set.seed(123)
-lineSelection <- rbinom(filesSize_df[3,3],1,.002) ## probability of a 1 to appear is 0,002 (for 0,2%) in all data
-
-#change for this:
-# set.seed(123)
-# lineSelection <- sample(as.integer(filesSize_df[3,3]), 5000)
-
-con <- file(paste(mywd, "/reports/final/en_US/en_US.twitter.txt", sep=""), 
-            "r")
-
-# enDataSubset <- readLines(con, skipNul = TRUE)[lineSelection]
-# close(con)
-
-enDataSubset <- integer()
-
-for (i in 1:length(lineSelection)){
-    
-        tmp <- readLines(con, lineSelection[i], skipNul = TRUE)
-        enDataSubset <- c(enDataSubset, tmp)
+subsetBigData <- function(file_Path, percentage) {
+    file_length <- length(readLines(file_Path, warn = FALSE))
+    number_Lines <- as.integer(file_length*(percentage/100))
+    set.seed(123)
+    lineSelection <- sample(file_length, number_Lines)
+    con <- file(file_Path, "r")
+    fileRead <- readLines(con, skipNul = TRUE)[lineSelection]
+    close(con)
+    return(fileRead)
 }
 
-close(con)
-
+enDataSubset <- subsetBigData(paste(directory, "/en_US.twitter.txt", sep=""), .2)
 
 ```
 
@@ -240,7 +229,7 @@ clean_corpus <- function(corpus){
 ```
 
 
-```{r, cache=TRUE}
+```{r, cache=TRUE }
 
 corp <- clean_corpus(corp_toClean)
 
@@ -253,7 +242,7 @@ An example of the text cleaning in action:
 
 ```{r }
 
-unlist(corp_toClean[[1]][1])[1]
+unlist(corp_toClean[[2]][1])[1]
 
 ```   
 
@@ -261,7 +250,7 @@ unlist(corp_toClean[[1]][1])[1]
 
 ```{r }
 
-corp[[1]][4800]
+corp[[2]][1]
 
 ```
 
