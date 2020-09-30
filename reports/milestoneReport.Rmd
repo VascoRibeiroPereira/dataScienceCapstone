@@ -178,7 +178,7 @@ A function named `clean_corpus` was made in order to clean the *Corpora* with th
 12. Replace to lower case *(i.e. "Ham" = "ham")*   
 13. Remove profane words    
 
-``` {r, cache=TRUE }
+``` {r }
 
 ## Expanding the contractions lexicon
 new_con <- data.frame("here's", "here is") 
@@ -219,10 +219,10 @@ clean_corpus <- function(corpus){
                                                replacement = hash_internet_slang[[2]], ignore.case = TRUE) %>%
                         replace_number() %>%
                         replace_emoji() %>%
-                        replace_non_ascii()
-        corpus <- tm_map(corpus, stripWhitespace)
-        corpus <- tm_map(corpus, tolower)
-        corpus <- tm_map(corpus, removeWords, profaneWords)
+                        replace_non_ascii() %>%
+                        stripWhitespace() %>%
+                        tolower() %>%
+                        removeWords(profaneWords)        
         return(corpus)
 }
 
@@ -242,7 +242,7 @@ An example of the text cleaning in action:
 
 ```{r }
 
-unlist(corp_toClean[[2]][1])[1]
+corp_toClean[[2]][1]$content
 
 ```   
 
@@ -256,7 +256,31 @@ corp[[2]][1]
 
 # Data Exploration {.tabset}
 
-Although the `Corpus` class is nice to apply cleaning methods by the `tm_map` function, and also to preserve metadata, it is not very usefull for data visualization and for modeling purposes. The data was transformed into a `character string`, with which it will be worked from now on.
+Although the `Corpus` class is nice to apply cleaning methods by the `tm` and `textclean` packages, and also to preserve metadata, it is not very usefull for data visualization and for modeling purposes. The data was transformed into a `character string`, with which it will be worked from now on.
+
+```{r, cache=TRUE }
+
+## Corpus to string
+corp_str <- as.character(unlist(corp))
+## Remove NA introduced by the cleaning algorithm
+corp_str <- corp_str[!is.na(corp_str)]
+## Preprocess
+
+corp_final <- as.character()
+
+for (i in 1:length(corp_str)){
+    
+    tmp <- preprocess(corp_str[i], case = "lower", 
+                       remove.punct = TRUE, 
+                       remove.numbers = TRUE, 
+                       fix.spacing = FALSE)
+    
+    corp_final <- c(corp_final, tmp)
+    
+}
+
+```
+
 
 
 
