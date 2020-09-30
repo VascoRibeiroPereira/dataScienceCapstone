@@ -144,12 +144,20 @@ The subset of the data was randomly selected with a `rbinom` function in relatio
 set.seed(123)
 lineSelection <- rbinom(filesSize_df[3,3],1,.002) ## probability of a 1 to appear is 0,002 (for 0,2%) in all data
 
+#change for this:
+# set.seed(123)
+# lineSelection <- sample(as.integer(filesSize_df[3,3]), 5000)
+
 con <- file(paste(mywd, "/reports/final/en_US/en_US.twitter.txt", sep=""), 
             "r")
+
+# enDataSubset <- readLines(con, skipNul = TRUE)[lineSelection]
+# close(con)
 
 enDataSubset <- integer()
 
 for (i in 1:length(lineSelection)){
+    
         tmp <- readLines(con, lineSelection[i], skipNul = TRUE)
         enDataSubset <- c(enDataSubset, tmp)
 }
@@ -247,14 +255,13 @@ An example of the text cleaning in action:
 
 unlist(corp_toClean[[1]][1])[1]
 
-
 ```   
 
 - After   
 
 ```{r }
 
-corp[[1]][1]
+corp[[1]][4800]
 
 ```
 
