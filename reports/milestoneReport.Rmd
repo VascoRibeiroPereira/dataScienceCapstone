@@ -53,6 +53,9 @@ library(tokenizers)
 library(markovchain)
 library(ngram)
 library(ggplot2)
+library(plotly)
+library(wordcloud)
+library(RColorBrewer)
 
 ```
 
@@ -119,13 +122,22 @@ filenames <- lapply(directory, list.files)
 
 filesSize_df <- tibble()
 for (i in 1:length(filenames[[1]])) {
-tmp_size <- utils:::format.object_size(file.info(filesFull[i])[["size"]], "auto")
-tmp_name <- filenames[[1]][i]
-tmp_length <- length(readLines(filesFull[i], warn = FALSE))
-tmp_row <- c(tmp_name, tmp_size, tmp_length)
-filesSize_df <- rbind(filesSize_df, tmp_row, stringsAsFactors = FALSE)
+
+    tmp_size <- utils:::format.object_size(file.info(filesFull[i])[["size"]], "auto")
+    tmp_name <- filenames[[1]][i]
+    tmp_length <- length(readLines(filesFull[i], warn = FALSE))
+    
+    tmp_words <- count_words(readLines(filesFull[i], warn = FALSE))
+    mean_words <- round(mean(tmp_words, na.rm = TRUE),0)
+    min_words <- min(tmp_words, na.rm = TRUE)
+    max_words <- max(tmp_words, na.rm = TRUE)
+    
+
+    tmp_row <- c(tmp_name, tmp_size, tmp_length, mean_words, min_words, max_words)
+    
+    filesSize_df <- rbind(filesSize_df, tmp_row, stringsAsFactors = FALSE)
 }
-names(filesSize_df) <- c("file names", "size", "entries")
+names(filesSize_df) <- c("file names", "size", "lines", "mean words", "min words", "max words")
 
 filesSize_df
 ```
@@ -281,6 +293,136 @@ for (i in 1:length(corp_str)){
 
 ```
 
+In order to ilustrate important features of the data it is usefull to create ngrams of the words. The intention is to understand the frequency of each term alone (unigram) or in chunks of 2 (bigram), 3 (trigram) or 4 (tetragram) words.
+
+```{r }
+
+## Function that creates the n-grams. This function accounts for the number of words in each setence 
+## x is a character string
+## n is the 'n' as in 'n-gram'
+
+ngram_freq <- function(x, n) {
+        if (n > 1) {
+        n_gram <- as_tibble(get.phrasetable(ngram(x[count_words(x) > n], n)))
+        }else{
+        n_gram <- as_tibble(get.phrasetable(ngram(x, 1)))
+        }
+        n_gram$ngrams <- gsub(" $", "", n_gram$ngrams)
+        return(n_gram)
+}
+
+```
+
+## Unigrams
+
+Here is presented an unigram frequency chart wih the most frequent unigrams (>=300)
+
+```{r, cache=TRUE }
+
+ng_1 <- ngram_freq(corp_final, 1)
+
+plot_1_gram <- ggplot(subset(ng_1, freq %in% 300:as.integer(ng_1[1,2])), aes(x = reorder(ngrams, freq), freq)) + 
+        geom_col(aes(fill = freq)) + 
+        xlab("Terms") +
+        ylab("Frequency") +
+        ggtitle("Unigram Frequency Chart", subtitle = waiver()) +
+        scale_fill_gradient(low = "green", 
+                            high = "red") +
+        coord_flip()
+ggplotly(plot_1_gram)
+
+```
+
+As expected 
+
+the - definite article
+a - indefinite article
+I - pronoun
+in to for of - preposition
+and - conjunction
 
 
+```{r }
 
+set.seed(1500)
+wordcloud(ng_1$ngrams[1:50], ng_1$freq[1:50], colors=brewer.pal(max(12,ncol(ng_1)),"Paired"))
+
+```
+
+
+## Bigrams
+
+```{r, cache=TRUE }
+
+ng_2 <- ngram_freq(corp_final, 2)
+
+plot_2_gram <- ggplot(subset(ng_2, freq %in% 80:as.integer(ng_2[1,2])), aes(x = reorder(ngrams, freq), freq)) + 
+        geom_col(aes(fill = freq)) + 
+        xlab("Terms") +
+        ylab("Frequency") +
+        ggtitle("Bigram Frequency Chart", subtitle = waiver()) +
+        scale_fill_gradient(low = "green", 
+                            high = "red") +
+        coord_flip()
+ggplotly(plot_2_gram)
+
+```
+
+```{r }
+
+set.seed(1500)
+wordcloud(ng_2$ngrams[1:50], ng_2$freq[1:50], colors=brewer.pal(max(12,ncol(ng_2)),"Paired"))
+
+```
+
+
+## Trigrams
+
+```{r, cache=TRUE }
+
+ng_3 <- ngram_freq(corp_final, 3)
+
+plot_3_gram <- ggplot(subset(ng_3, freq %in% 15:as.integer(ng_3[1,2])), aes(x = reorder(ngrams, freq), freq)) + 
+        geom_col(aes(fill = freq)) + 
+        xlab("Terms") +
+        ylab("Frequency") +
+        ggtitle("Trigram Frequency Chart", subtitle = waiver()) +
+        scale_fill_gradient(low = "green", 
+                            high = "red") +
+        coord_flip()
+ggplotly(plot_3_gram)
+
+```
+
+```{r }
+
+set.seed(1200)
+wordcloud(ng_3$ngrams[1:40], ng_3$freq[1:40], colors=brewer.pal(max(12,ncol(ng_3)),"Paired"))
+
+```
+
+## Tetragrams
+
+```{r, cache=TRUE }
+
+ng_4 <- ngram_freq(corp_final, 4)
+
+
+plot_4_gram <- ggplot(subset(ng_4, freq %in% 5:as.integer(ng_4[1,2])), aes(x = reorder(ngrams, freq), freq)) + 
+        geom_col(aes(fill = freq)) + 
+        xlab("Terms") +
+        ylab("Frequency") +
+        ggtitle("Tetragram Frequency Chart", subtitle = waiver()) +
+        scale_fill_gradient(low = "green", 
+                            high = "red") +
+        coord_flip()
+ggplotly(plot_4_gram)
+
+```
+
+```{r }
+
+set.seed(1200)
+wordcloud(ng_4$ngrams[1:40], ng_4$freq[1:40], colors=brewer.pal(max(12,ncol(ng_4)),"Paired"))
+
+```

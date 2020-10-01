@@ -9,18 +9,21 @@ corp_str <- preprocess(corp_str, case = "lower",
 
 
 ## n-gram tables
-ng_1 <- as_tibble(get.phrasetable(ngram(corp_str, 1)))
-ng_1$ngrams <- gsub(" $", "", ng_1$ngrams)
 
-ng_2 <- as_tibble(get.phrasetable(ngram(corp_str, 2)))
-ng_2$ngrams <- gsub(" $", "", ng_2$ngrams)
+ngram_freq <- function(x, n) {
+        if (n > 1) {
+        n_gram <- as_tibble(get.phrasetable(ngram(x[count_words(x) > n], n)))
+        }else{
+        n_gram <- as_tibble(get.phrasetable(ngram(x, 1)))
+        }
+        n_gram$ngrams <- gsub(" $", "", n_gram$ngrams)
+        return(n_gram)
+}
 
-ng_3 <- as_tibble(get.phrasetable(ngram(corp_str, 3)))
-ng_3$ngrams <- gsub(" $", "", ng_3$ngrams)
-
-ng_4 <- as_tibble(get.phrasetable(ngram(corp_str, 4)))
-ng_4$ngrams <- gsub(" $", "", ng_4$ngrams)
-
+ng_1 <- ngram_freq(corp_final, 1)
+ng_2 <- ngram_freq(corp_final, 2)
+ng_3 <- ngram_freq(corp_final, 3)
+ng_4 <- ngram_freq(corp_final, 4)
 
 ## plots
 
