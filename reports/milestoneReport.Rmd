@@ -336,7 +336,7 @@ ggplotly(plot_1_gram)
 
 ```
 
-```{r }
+```{r, cache=TRUE }
 
 set.seed(1500)
 wordcloud(ng_1$ngrams[1:50], ng_1$freq[1:50], colors=brewer.pal(max(12,ncol(ng_1)),"Paired"))
@@ -430,9 +430,9 @@ wordcloud(ng_4$ngrams[1:40], ng_4$freq[1:40], colors=brewer.pal(max(12,ncol(ng_4
 
 ### Unique Words
 
-The question of how many unique words would cover most of our word instances.
+About the question of how many unique words would cover most of our word instances.
 
-```{r }
+```{r, cache=TRUE }
 
 c_ng1 <- ng_1 %>%
         mutate(Cumulative = cumsum(prop))
@@ -441,12 +441,12 @@ plot_c_ng1 <- ggplot(c_ng1, aes(1:dim(c_ng1)[1], Cumulative)) +
         geom_line() +
         annotate("rect", xmin = 0, xmax = dim(c_ng1 %>% filter(Cumulative <= .500))[1], 
                  ymin = 0, ymax = .50, alpha = .4) +
-        annotate("text", x = 1000, y = .25, label = "50% Cover") +
+        annotate("text", x = 1000, y = .25, label = "<50% Cover") +
         annotate("rect", xmin = 0, xmax = dim(c_ng1 %>% filter(Cumulative <= .900))[1], 
                  ymin = 0, ymax = .90, alpha = .3) +
-        annotate("text", x = 6000, y = .96, label = "90% Cover") +
+        annotate("text", x = 2500, y = .96, label = "90% Cover") +
         annotate("rect", xmin = 0, xmax = dim(c_ng1 %>% filter(Cumulative <= 1.000))[1], 
-                 ymin = 0, ymax = 1.00, alpha = .2) +
+                 ymin = 0, ymax = .90, alpha = .2) +
         annotate("text", x = 8500, y = 1.05, label = "100% Cover") +
         xlab("Number of Terms") +
         ylab("Cumulative Proportion")
@@ -457,9 +457,9 @@ ggplotly(plot_c_ng1)
 
 The graph of the **number of terms** versus **cumulative proportion** reveals that only `r dim(filter(c_ng1, Cumulative <= .500))[1]` terms are needed to cover 50% of words instances and `r dim(filter(c_ng1, Cumulative <= .900))[1]` for 90%, in a +n universe of `r dim(c_ng1)[1]` terms.
 
-### Conclusions
+### nGram Observations
 
-```{r }
+```{r, cache=TRUE }
 
 stopSubset <- as.numeric()
 uniqueStopWords <- unique(stop_words$word)
@@ -490,7 +490,7 @@ Taking in account the prediction model, it can que usefull for reducing size and
 
 It is interesting to understand the presence of foreign languages in the text in order to understand if it impacts significantly the prediction algorithm (intended to be in english in the current work). For that the `textcat` package was used with the profile `ECIMCI_profiles` and the method `Dice`.
 
-```{r }
+```{r, cache=TRUE }
 
 lang_ng1 <- textcat(ng_1$ngrams, p=textcat::ECIMCI_profiles, method = "Dice")
 lang_ng1_df <- as_tibble(table(lang_ng1)) %>% arrange(desc(n))
@@ -513,13 +513,14 @@ lang_ng3_df <- lang_ng3_df %>% mutate(ngram = "Trigram") %>%
 
 lang_ng_n <- bind_rows(lang_ng1_df, lang_ng2_df, lang_ng3_df)
 langPlot <- ggplot(lang_ng_n, aes(language, n)) + geom_col() # barplot
-langPlot <- langPlot + facet_wrap( ~ ngram, nrow = 3) + theme(legend.position = "none")
+neworder <- c("Unigram","Bigram","Trigram")
+langPlot <- langPlot + facet_wrap( ~ factor(ngram,levels=neworder), nrow = 3) + theme(legend.position = "none")
 
 ggplotly(langPlot)
 
 ```
 
-
+The language identification varies for english in this fashion: Unigram < Bigram < Trigram. It is a fact that most words in the provided text are english but some terms may be confused with other languages and the context (added with the multi-grams) narrows down the error in the identifications. Assuming the Trigrams as the less error prone we have `r round((lang_ng3_df %>% filter(language == "en"))$n/sum(lang_ng3_df$n)*100)`% of words in english.
 
 
 ## Parts of Speech
