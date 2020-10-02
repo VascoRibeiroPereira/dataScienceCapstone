@@ -71,13 +71,13 @@ plot_c_ng1 <- ggplot(c_ng1, aes(1:dim(c_ng1)[1], Cumulative)) +
         geom_line() +
         annotate("rect", xmin = 0, xmax = dim(c_ng1 %>% filter(Cumulative <= .500))[1], 
                  ymin = 0, ymax = .50, alpha = .4) +
-        annotate("text", x = 1000, y = .25, label = "<<<< 50% Cover") +
+        annotate("text", x = 1000, y = .25, label = "50% Cover") +
         annotate("rect", xmin = 0, xmax = dim(c_ng1 %>% filter(Cumulative <= .900))[1], 
                  ymin = 0, ymax = .90, alpha = .3) +
-        annotate("text", x = 6000, y = .96, label = "<<<< 90% Cover") +
+        annotate("text", x = 6000, y = .96, label = "90% Cover") +
         annotate("rect", xmin = 0, xmax = dim(c_ng1 %>% filter(Cumulative <= 1.000))[1], 
                  ymin = 0, ymax = 1.00, alpha = .2) +
-        annotate("text", x = 8500, y = 1.05, label = "<<<< 100% Cover") +
+        annotate("text", x = 8500, y = 1.05, label = "100% Cover") +
         xlab("Number of Terms") +
         ylab("Cumulative Proportion")
 
