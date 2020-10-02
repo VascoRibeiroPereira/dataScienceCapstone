@@ -455,7 +455,7 @@ ggplotly(plot_c_ng1)
 
 ```
 
-The graph of the **number of terms** versus **cumulative proportion** reveals that only `r dim(filter(c_ng1, Cumulative <= .500))[1]` terms are needed to cover 50% of words instances and `r dim(filter(c_ng1, Cumulative <= .900))[1]` for 90%, in a +n universe of `r dim(c_ng1)[1]` terms.
+The graph of the **number of terms** versus **cumulative proportion** reveals that only `r dim(filter(c_ng1, Cumulative <= .500))[1]` terms are needed to cover 50% of words instances and `r dim(filter(c_ng1, Cumulative <= .900))[1]` for 90%, in a universe of `r dim(c_ng1)[1]` terms.
 
 ### nGram Observations
 
@@ -483,7 +483,7 @@ The impact of this words is remarkable, with a little percentage of unique words
 
 The current work must take the stop words into account since the intention is to predict text (independent of its nature), although it would be necessary to remove the stop words in many other contexts (i.e. sentiment analysis).
 
-Taking in account the prediction model, it can que usefull for reducing size and runtime to work only with the 90% coverage ngrams.
+For the prediction model, it can que usefull to persuit a reduction of size and runtime working only with the 90% of the ngrams.
 
 
 ## Language
@@ -523,9 +523,25 @@ ggplotly(langPlot)
 The language identification varies for english in this fashion: Unigram < Bigram < Trigram. It is a fact that most words in the provided text are english but some terms may be confused with other languages and the context (added with the multi-grams) narrows down the error in the identifications. Assuming the Trigrams as the less error prone we have `r round((lang_ng3_df %>% filter(language == "en"))$n/sum(lang_ng3_df$n)*100)`% of words in english.
 
 
-## Parts of Speech
+## Parts of Speech (POS)
 
 The POS - Parts pf Speech, can include an interesting feature to the future algorithm, since it can add a smart and eficient way to understand the next most probable word in the context. 
 In an over simplification, "hello world" is labeled as "INTJ NOUN", as such the algorithm would try to find a NOUN to an INTJ - *for example user: "hello", suggested: "vasco"*.
-The package `RDRPOSTagger` can be helpfull in this subject.
+The package `RDRPOSTagger` can be helpfull in this subject and its usefullness will be accessed during the prediction model development.
+
+# Prediction Algorithm {.tabset}
+
+The current plan for the prediction algorithm is:   
+
+- Check feasibility to include:   
+    - Language determination
+    - POS
+    - Only `r round((dim(filter(c_ng1, Cumulative <= .900))[1]/dim(c_ng1)[1])*100)`% of terms (corresponding to 90% coverage)
+
+- Fit the n-grams model with Markov Chains:   
+    - Using all the n-grams by combination (solving unobserved cases but adding less accurate results)   
+    - Explore the possibility of include Topic Modeling    
+        - Latent Dirichlet Allocation (LDA)    
+            - LDA assume that the document is a bag of words, the documents should be big (not the twitter case)   
+
 
