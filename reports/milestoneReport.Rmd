@@ -31,7 +31,9 @@ The objectives of this report is to:
 
 ## Summary
 
-To be completed after the Report being made.
+This report gives an insight of the raw data structure and summarises its characteristics (size, number of lines and number of words). For the principal focus of the prediction algorithm the `en_US.twitter.txt` was used. 
+The data was cleaned, and explored by geting the one to four gram frequencies charts. Also it was made an interesting observation - a small set of more frequent words (36%) cover 90% of all terms in the corpora. By reducing the number of terms we may cover most of the instances with a smaller size data for a better user experience.
+
 
 For more information please visit the repository of the present work at <https://github.com/VascoRibeiroPereira/dataScienceCapstone>
 
