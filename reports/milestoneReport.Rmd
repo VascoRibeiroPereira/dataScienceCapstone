@@ -145,14 +145,14 @@ names(filesSize_df) <- c("file names", "size", "lines", "mean words", "min words
 filesSize_df
 ```
 
-This work will focus primarily in the `en_US.twitter.txt`. This data have `r filesSize_df[3,3]` entries, which means that there's a lot of data to work with and may be impractical to import the complete file to perform data analysis due to memory limitations.
+This work will focus primarily on the `en_US.twitter.txt`. This data have `r filesSize_df[3,3]` entries, which means that there's a lot of data to work with and may be impractical to import the complete file to perform data analysis due to memory limitations.
 
 For the time being this work will be focused in ~5000 random selected entries of text from the `en_US.twitter.txt`, representing `r paste(round(5000/as.numeric(filesSize_df[3,3])*100,1), "%", sep="")` of the complete data.
 
 
 # Cleaning the Data {.tabset}
 
-The subset of the data was randomly selected with a `sample` function in relation to the chosen percentage of the number of entries. 
+The subset of the data was randomly selected with a `sample` function in accordance to the chosen percentage of the number of entries. 
 
 ```{r, cache=TRUE }
 
@@ -171,7 +171,7 @@ enDataSubset <- subsetBigData(paste(directory, "/en_US.twitter.txt", sep=""), .2
 
 ```
 
-For cleaning purposes the data was transformed in a `Volatile Corpora` with the **`tm`** package.
+For cleaning purposes the data was transformed to a `Volatile Corpora` with the **`tm`** package.
 
 ```{r, cache=TRUE }
 corp_toClean <- VCorpus(VectorSource(enDataSubset))
@@ -320,7 +320,7 @@ ngram_freq <- function(x, n) {
 
 ### Unigrams
 
-Graphical representation of the unigram frequency with the most frequent unigrams (>=300 occurrences) and its respective wordcloud with the 50 most frequent words.
+Graphical representation of the unigram frequency with the most frequent unigrams (>=300 occurrences) and its respective word cloud with the 50 most frequent words.
 
 ```{r, cache=TRUE }
 
@@ -348,7 +348,7 @@ wordcloud(ng_1$ngrams[1:50], ng_1$freq[1:50], colors=brewer.pal(max(12,ncol(ng_1
 
 ### Bigrams
 
-Graphical representation of the bigram frequency with the most frequent unigrams (>=80 occurrences) and its respective wordcloud with the 50 most frequent words.
+Graphical representation of the bigram frequency with the most frequent unigrams (>=80 occurrences) and its respective word cloud with the 50 most frequent words.
 
 ```{r, cache=TRUE }
 
@@ -376,7 +376,7 @@ wordcloud(ng_2$ngrams[1:50], ng_2$freq[1:50], colors=brewer.pal(max(12,ncol(ng_2
 
 ### Trigrams
 
-Graphical representation of the trigram frequency with the most frequent unigrams (>=15 occurrences) and its respective wordcloud with the 40 most frequent words.
+Graphical representation of the trigram frequency with the most frequent unigrams (>=15 occurrences) and its respective word cloud with the 40 most frequent words.
 
 ```{r, cache=TRUE }
 
@@ -403,7 +403,7 @@ wordcloud(ng_3$ngrams[1:40], ng_3$freq[1:40], colors=brewer.pal(max(12,ncol(ng_3
 
 ### Tetragrams
 
-Graphical representation of the tetragram frequency with the most frequent unigrams (>=5 occurrences) and its respective wordcloud with the 40 most frequent words.
+Graphical representation of the tetragram frequency with the most frequent unigrams (>=5 occurrences) and its respective word cloud with the 40 most frequent words.
 
 ```{r, cache=TRUE }
 
@@ -483,7 +483,7 @@ By comparing the words from our sample with the `stop_words` data frame we obser
 
 The impact of this words is remarkable, with a little percentage of unique words, having the frequency into account we get `r round(freqStopWords/sum(ng_1$freq) *100, 1)`%!
 
-The current work must take the stop words into account since the intention is to predict text (independent of its nature), although it would be necessary to remove the stop words in many other contexts (i.e. sentiment analysis).
+The current work must take the stop words into account since the intention is to predict text (independent of its nature), although it would be necessary to remove the stop words in many other contexts (i.e. sentiment analysis or topic modeling).
 
 For the prediction model, it can que useful to pursuit a reduction of size and runtime working only with the 90% of the ngrams.
 
