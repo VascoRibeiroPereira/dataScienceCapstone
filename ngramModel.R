@@ -1,48 +1,37 @@
-source("getCleanData.R")
+# Get subseted clean data (1%) and functions
 
-# Corpus to string with stopWords
-
-corp_str <- concatenate(text=unlist(lapply(corp_StopWords, "[", "content"))) ## with the stopwords
-corp_str <- preprocess(corp_str, case = "lower", 
-                       remove.punct = TRUE, 
-                       remove.numbers = TRUE, 
-                       fix.spacing = FALSE)
+twitterDF <- read_csv("twitter_subset.csv")
+source("ngramModel_fun.R")
 
 
-text_term_unclean <- strsplit(corp_str, split = " ") %>% unlist()
-
-text_term <- character()
-
-for (i in 1:length(text_term_unclean)) {
-        if (count_characters(text_term_unclean[i]) > 0) {
-                text_term <- c(text_term, text_term_unclean[i])
-        }
-        
+ngram_freq <- function(x, n) {
+        ngram <- NGramTokenizer(x, Weka_control(min = n, max = n))
+        return(ngram)
 }
-                
-## unigram
 
-fit_markov <- markovchainFit(text_term, method = "laplace")
 
-## bigram
+unigram <- ngram_freq(twitterDF$text, 1)
+bigram <- ngram_freq(twitterDF$text, 2)
+trigram <- ngram_freq(twitterDF$text, 3)
 
-mydf <- as.data.frame(text_term[1:500])
 
-bigram_twitter <- mydf %>%
-        unnest_tokens(bigram, text_term, token = "ngrams", n = 2) %>% 
-        pull(bigram)
+## fit
 
-markov_bigram <- markovchainFit(bigram_twitter[1:3000])
+fit_markov <- markovchainFit(unigram, method = "laplace")
+markov_bigram <- markovchainFit(bigram, method = "laplace")
+markov_trigram <- markovchainFit(trigram, method = "laplace")
 
-## trigram
 
-trigram_twitter <- mydf %>%
-        unnest_tokens(trigram, text_term, token = "ngrams", n = 3) %>% 
-        pull(trigram)
+save(unigram, file = "unigram.RData")
+save(bigram, file = "bigram.RData")
+save(trigram, file = "trigram.RData")
 
-markov_trigram <- markovchainFit(trigram_twitter[1:3000])
+save(fit_markov, file = "fit_markov.RData")
+save(markov_bigram, file = "markov_bigram.RData")
+save(markov_trigram, file = "markov_trigram.RData")
 
-## Fusion of the uni, bi and trigram models to predict next word
+predictive_text("to do what i", 1) ## "love"
 
-predictive_text("to do what i", 5) ## "love"
+
+
 
