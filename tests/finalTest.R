@@ -46,24 +46,25 @@ cleanInNoStop <- function(userInput) {
 userInputClean <- cleanInNoStop(userInput)
 
 
+cleanInput <- function(userInput) {
+        userInputOut <- userInput %>%
+                replace_contraction() %>%
+                removePunctuation() %>%
+                replace_money() %>%
+                replace_emoticon() %>%
+                replace_symbol() %>%
+                replace_word_elongation() %>%
+                replace_ordinal() %>%
+                replace_number() %>%
+                stripWhitespace() %>%
+                tolower() %>%
+                str_split(pattern = " ") %>%
+                unlist()
+        
+        return(userInputOut)
+}
+
 if (sum(count_words(userInputClean)) == 0){
-        cleanInput <- function(userInput) {
-                userInputOut <- userInput %>%
-                        replace_contraction() %>%
-                        removePunctuation() %>%
-                        replace_money() %>%
-                        replace_emoticon() %>%
-                        replace_symbol() %>%
-                        replace_word_elongation() %>%
-                        replace_ordinal() %>%
-                        replace_number() %>%
-                        stripWhitespace() %>%
-                        tolower() %>%
-                        str_split(pattern = " ") %>%
-                        unlist()
-                
-                return(userInputOut)
-        }
         
         userInputCleanStop <- cleanInput(userInput)
         
@@ -98,10 +99,20 @@ trigramSW <- ngram_freq(withSW$text, 3)
 tetragramSW <- ngram_freq(withSW$text, 4)
 pentagramSW <- ngram_freq(withSW$text, 5)
 
+#### Conjugation in a list
 
-## Evaluate against the ngrams
+gramList <- list()
+
+gramList$normal <- list(unigram, bigram, trigram, tetragram, pentagram)
+gramList$sw <- list(unigramSW, bigramSW, trigramSW, tetragramSW, pentagramSW)
+
+
+## Evaluate against the ngrams - no sw
 
 ### Guarantee a max five word input and evaluate
+
+getWordsSuggested <- function(userInputClean, gramList) {
+
 if (length(userInputClean) > 4) {
         userInput_crop <- userInputClean[(length(userInputClean)-3):length(userInputClean)]
         userInput_crop <- paste("^", paste(userInput_crop, collapse = " "), sep="")
@@ -109,48 +120,84 @@ if (length(userInputClean) > 4) {
         userInput_crop <- paste("^", paste(userInputClean, collapse = " "), sep="")
 }
 
-
+freqGramOutput <- tibble()
+        
 if (count_words(userInput_crop) == 4) {
         
-        freqGramOutput <- tibble()
-        
-        pentagram[grep(userInput_crop, pentagram$ngrams),] ## 4 words search in pentagram
+        freqGramOutput <- rbind(freqGramOutput, gramList[[5]][grep(userInput_crop, gramList[[5]]$ngrams),]) ## 4 words search in pentagram
         
         userInput_crop <- unlist(str_split(userInput_crop, " "))
         userInput_crop <- paste("^", paste(userInput_crop[2:length(userInput_crop)], collapse = " "), sep="")
         
-        freqGramOutput <- rbind(freqGramOutput, tetragram[grep(userInput_crop, tetragram$ngrams),][1:2,]) ## 3 words search in tetragram
+        freqGramOutput <- rbind(freqGramOutput, gramList[[4]][grep(userInput_crop, gramList[[4]]$ngrams),][1:2,]) ## 3 words search in tetragram
         
         userInput_crop <- unlist(str_split(userInput_crop, " "))
         userInput_crop <- paste("^", paste(userInput_crop[2:length(userInput_crop)], collapse = " "), sep="")
         
-        freqGramOutput <- rbind(freqGramOutput, trigram[grep(userInput_crop, trigram$ngrams),][1:2,]) ## 2 words search in trigram
+        freqGramOutput <- rbind(freqGramOutput, gramList[[3]][grep(userInput_crop, gramList[[3]]$ngrams),][1:2,]) ## 2 words search in trigram
         
         userInput_crop <- unlist(str_split(userInput_crop, " "))
         userInput_crop <- paste("^", paste(userInput_crop[2:length(userInput_crop)], collapse = " "), sep="")
         
-        freqGramOutput <- rbind(freqGramOutput, bigram[grep(userInput_crop, bigram$ngrams),][1:2,]) ## 1 word search in bigram
+        freqGramOutput <- rbind(freqGramOutput, gramList[[2]][grep(userInput_crop, gramList[[2]]$ngrams),][1:2,]) ## 1 word search in bigram
+        
+}
+
+if (count_words(userInput_crop) == 3) {
+        
+        freqGramOutput <- rbind(freqGramOutput, gramList[[4]][grep(userInput_crop, gramList[[4]]$ngrams),][1:2,]) ## 3 words search in tetragram
+        
+        userInput_crop <- unlist(str_split(userInput_crop, " "))
+        userInput_crop <- paste("^", paste(userInput_crop[2:length(userInput_crop)], collapse = " "), sep="")
+        
+        freqGramOutput <- rbind(freqGramOutput, gramList[[3]][grep(userInput_crop, gramList[[3]]$ngrams),][1:2,]) ## 2 words search in trigram
+        
+        userInput_crop <- unlist(str_split(userInput_crop, " "))
+        userInput_crop <- paste("^", paste(userInput_crop[2:length(userInput_crop)], collapse = " "), sep="")
+        
+        freqGramOutput <- rbind(freqGramOutput, gramList[[2]][grep(userInput_crop, gramList[[2]]$ngrams),][1:2,]) ## 1 word search in bigram
         
 }
 
 
+if (count_words(userInput_crop) == 2) {
+        
+        freqGramOutput <- rbind(freqGramOutput, gramList[[3]][grep(userInput_crop, gramList[[3]]$ngrams),][1:2,]) ## 2 words search in trigram
+        
+        userInput_crop <- unlist(str_split(userInput_crop, " "))
+        userInput_crop <- paste("^", paste(userInput_crop[2:length(userInput_crop)], collapse = " "), sep="")
+        
+        freqGramOutput <- rbind(freqGramOutput, gramList[[2]][grep(userInput_crop, gramList[[2]]$ngrams),][1:2,]) ## 1 word search in bigram
+        
+}
 
 
+if (count_words(userInput_crop) == 1) {
+        
+        freqGramOutput <- rbind(freqGramOutput, gramList[[2]][grep(userInput_crop, gramList[[2]]$ngrams),][1:2,]) ## 1 word search in bigram
+        
+}
 
 
+gramOutput <- drop_na(freqGramOutput)
+gramOutput <- gramOutput$ngrams
+wordSugestions <- unique(unlist(lapply(str_split(gramOutput, " "), last))) ## can turn t6his better by display the most resurrent words first
 
+return(wordSugestions)
 
+}
 
-
-### Number of Terms
-
-
+if (length(userInputClean) != 0) wordSugestions <- getWordsSuggested(userInputClean, gramList$normal)
 
 
 if (exists("userInputCleanStop")) {
-        
+        wordSugestions <- unique(getWordsSuggested(userInputCleanStop, gramList$sw))
         
 }else{
-        
-        
+        if (length(wordSugestions) <= 2) { 
+                userInputCleanStop <- cleanInput(userInput)
+                wordSugestions <- unique(c(wordSugestions, getWordsSuggested(userInputCleanStop, gramList$sw)))
+        }
 }
+
+
