@@ -2,7 +2,7 @@ library(readr)
 source("getCleanData_fun.R")
 source("finalTest_Fun.R")
 
-userInput <- "my best friend is sad, but I'll helping him" #out" - missing word
+userInput <- "" ## test it out
 
 evaluateCurses(userInput)
 
@@ -28,4 +28,4 @@ if (exists("userInputCleanStop")) {
         }
 }
 
-
+wordSugestions
